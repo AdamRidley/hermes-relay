@@ -26,6 +26,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6.4.0
 
+      - name: Use a stable debug keystore
+        # Every runner mints its own debug key, so APKs from different runs
+        # cannot update one another. A shared debug key lets each new build
+        # replace the previous test install in place.
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p "$HOME/.android"
+          printf '%s' "$DEBUG_KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+
+      - name: Unit tests
+        # Scoped to the class this branch adds: the full suite carries two
+        # pre-existing TimeoutCancellationException failures unrelated to it.
+        run: ./gradlew testSideloadDebugUnitTest --tests "com.hermesandroid.relay.data.ThinkingSegmentsTest" --console=plain
+
       - name: Build debug APKs
         run: ./gradlew assembleDebug --console=plain
 
