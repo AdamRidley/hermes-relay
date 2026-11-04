@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import com.hermesandroid.relay.R
+import com.hermesandroid.relay.data.ReasoningDurations
 import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,15 +78,21 @@ fun ThinkingBlock(
     LaunchedEffect(isStreaming, collapsedByDefault) {
         if (!userToggled) expanded = isStreaming && !collapsedByDefault
     }
-    // Seconds this block has been (or was) live. Ticks while streaming and
-    // keeps its last value afterwards, so a settled block can still say how
-    // long it took without any persisted timing state.
-    var liveSeconds by remember(stateKey) { mutableIntStateOf(0) }
+    // Seconds this block has been (or was) live. Seeded from the process-level
+    // registry so a block that scrolls out and back keeps its total instead of
+    // restarting at zero, and written back on every tick for the same reason.
+    var liveSeconds by rememberSaveable(stateKey, "seconds") {
+        mutableIntStateOf(stateKey?.let(ReasoningDurations::get) ?: 0)
+    }
     LaunchedEffect(isStreaming, stateKey) {
-        if (!isStreaming) return@LaunchedEffect
+        if (!isStreaming) {
+            stateKey?.let { ReasoningDurations.record(it, liveSeconds) }
+            return@LaunchedEffect
+        }
         while (true) {
             delay(1_000)
             liveSeconds += 1
+            stateKey?.let { ReasoningDurations.record(it, liveSeconds) }
         }
     }
     val locale = LocalLocale.current.platformLocale
