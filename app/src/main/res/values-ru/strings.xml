@@ -2702,6 +2702,7 @@
     <string name="tool_run_preparing">Подготовка: %1$s</string>
     <string name="tool_run_running">Выполняется: %1$s</string>
     <string name="tool_run_finished">Завершено: %1$s</string>
+    <string name="tool_run_ran">Выполнено: %1$s</string>
     <plurals name="tool_run_reading"><item quantity="one">Чтение %d элемента</item><item quantity="few">Чтение %d элементов</item><item quantity="many">Чтение %d элементов</item><item quantity="other">Чтение %d элементов</item></plurals>
     <plurals name="tool_run_read"><item quantity="one">Прочитан %d элемент</item><item quantity="few">Прочитано %d элемента</item><item quantity="many">Прочитано %d элементов</item><item quantity="other">Прочитано %d элементов</item></plurals>
     <plurals name="tool_run_searching"><item quantity="one">Поиск в %d источнике</item><item quantity="few">Поиск в %d источниках</item><item quantity="many">Поиск в %d источниках</item><item quantity="other">Поиск в %d источниках</item></plurals>
@@ -3477,6 +3478,8 @@
     <string name="thinking_title">Ход мыслей</string>
     <string name="thinking_settled">Мысль</string>
     <string name="thinking_thinking">Обдумывает...</string>
+    <string name="thinking_thinking_for">Думает %1$s</string>
+    <string name="thinking_thought_for">Думал %1$s</string>
     <string name="thinking_thinking_short">Обдумывает</string>
     <string name="task_background_prefix">Фоновая задача, </string>
     <string name="task_collapse_timeline">Свернуть таймлайн задачи</string>

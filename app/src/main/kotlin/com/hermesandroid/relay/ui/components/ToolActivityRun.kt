@@ -150,7 +150,19 @@ fun ToolActivityRun(
 ) {
     if (calls.isEmpty()) return
     var expanded by rememberSaveable(calls.first().uiKey) { mutableStateOf(false) }
-    val summary = toolActivitySummary(countToolActivity(calls), live)
+    val counts = countToolActivity(calls)
+    // One shell call reads better as the command itself ("Ran curl -s ..."):
+    // a count gives the reader nothing they cannot see. Several calls keep the
+    // "Ran 2 commands" summary and the expandable body.
+    val singleCommand = calls.singleOrNull()?.takeIf { counts.commands == 1 }
+    val subject = singleCommand?.activitySubject()
+    val summary = when {
+        singleCommand != null && subject != null -> stringResource(
+            if (singleCommand.isComplete) R.string.tool_run_ran else R.string.tool_run_running,
+            subject,
+        )
+        else -> toolActivitySummary(counts, live)
+    }
     val stateLabel = if (expanded) {
         stringResource(R.string.tool_progress_cd_collapse)
     } else {
@@ -211,7 +223,7 @@ fun ToolActivityRun(
             )
         }
 
-        if (live && !expanded) {
+        if (live && !expanded && subject == null) {
             val latest = calls.last()
             AnimatedContent(
                 targetState = latest.uiKey,
@@ -283,4 +295,22 @@ private fun toolActivityTickerLabel(call: ToolCall): String {
         !call.isComplete -> stringResource(R.string.tool_run_running, name)
         else -> stringResource(R.string.tool_run_finished, name)
     }
+}
+
+/**
+ * What a single tool call was asked to do, on one line: the command for a
+ * shell tool, otherwise the compacted arguments. Null when there is nothing
+ * more useful than the tool name itself.
+ */
+internal fun ToolCall.activitySubject(maxChars: Int = 80): String? {
+    val raw = args?.trim().orEmpty()
+    if (raw.isEmpty()) return null
+    val command = runCatching {
+        org.json.JSONObject(raw).optString("command").takeIf(String::isNotBlank)
+    }.getOrNull()
+    val subject = (command ?: compactToolDetail(raw, maxChars))
+        .replace(Regex("\\s+"), " ")
+        .trim()
+    if (subject.isBlank()) return null
+    return if (subject.length <= maxChars) subject else subject.take(maxChars).trimEnd() + "..."
 }

@@ -3102,6 +3102,7 @@
     <string name="tool_run_preparing">Preparing %1$s</string>
     <string name="tool_run_running">Running %1$s</string>
     <string name="tool_run_finished">Finished %1$s</string>
+    <string name="tool_run_ran">Ran %1$s</string>
     <plurals name="tool_run_reading"><item quantity="one">Reading %d item</item><item quantity="other">Reading %d items</item></plurals>
     <plurals name="tool_run_read"><item quantity="one">Read %d item</item><item quantity="other">Read %d items</item></plurals>
     <plurals name="tool_run_searching"><item quantity="one">Searching %d source</item><item quantity="other">Searching %d sources</item></plurals>
@@ -4045,6 +4046,8 @@
     <string name="thinking_title">Thought process</string>
     <string name="thinking_settled">Thought</string>
     <string name="thinking_thinking">Thinking...</string>
+    <string name="thinking_thinking_for">Thinking for %1$s</string>
+    <string name="thinking_thought_for">Thought for %1$s</string>
     <string name="thinking_thinking_short">Thinking</string>
     <string name="task_background_prefix">Background task, </string>
     <string name="task_collapse_timeline">Collapse task timeline</string>

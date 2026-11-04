@@ -2717,6 +2717,7 @@
     <string name="tool_run_preparing">%1$s を準備中</string>
     <string name="tool_run_running">%1$s を実行中</string>
     <string name="tool_run_finished">%1$s が完了</string>
+    <string name="tool_run_ran">%1$s を実行しました</string>
     <plurals name="tool_run_reading"><item quantity="other">%d 件を読み取り中</item></plurals>
     <plurals name="tool_run_read"><item quantity="other">%d 件を読み取り</item></plurals>
     <plurals name="tool_run_searching"><item quantity="other">%d 件のソースを検索中</item></plurals>
@@ -3842,6 +3843,8 @@
     <string name="thinking_settled">思考</string>
     <string name="thinking_thinking_short">考え中</string>
     <string name="thinking_thinking">考え中…</string>
+    <string name="thinking_thinking_for">%1$s 考えています</string>
+    <string name="thinking_thought_for">%1$s 考えました</string>
     <string name="task_status_working">作業中</string>
     <string name="task_status_needs_input">入力が必要</string>
     <string name="task_status_failed">失敗</string>

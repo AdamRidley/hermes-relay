@@ -2703,6 +2703,7 @@
     <string name="tool_run_preparing">正在准备%1$s</string>
     <string name="tool_run_running">正在运行%1$s</string>
     <string name="tool_run_finished">已完成%1$s</string>
+    <string name="tool_run_ran">已运行 %1$s</string>
     <plurals name="tool_run_reading"><item quantity="other">正在读取 %d 项</item></plurals>
     <plurals name="tool_run_read"><item quantity="other">已读取 %d 项</item></plurals>
     <plurals name="tool_run_searching"><item quantity="other">正在搜索 %d 个来源</item></plurals>
@@ -3773,6 +3774,8 @@
     <string name="thinking_settled">思考</string>
     <string name="thinking_thinking_short">思考中</string>
     <string name="thinking_thinking">思考中…</string>
+    <string name="thinking_thinking_for">思考中 %1$s</string>
+    <string name="thinking_thought_for">思考了 %1$s</string>
     <string name="task_status_working">处理中</string>
     <string name="task_status_needs_input">需要输入</string>
     <string name="task_status_failed">失败</string>

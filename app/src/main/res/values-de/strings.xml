@@ -2709,6 +2709,7 @@
     <string name="tool_run_preparing">%1$s wird vorbereitet</string>
     <string name="tool_run_running">%1$s wird ausgeführt</string>
     <string name="tool_run_finished">%1$s abgeschlossen</string>
+    <string name="tool_run_ran">Ausgeführt: %1$s</string>
     <plurals name="tool_run_reading"><item quantity="one">%d Element wird gelesen</item><item quantity="other">%d Elemente werden gelesen</item></plurals>
     <plurals name="tool_run_read"><item quantity="one">%d Element gelesen</item><item quantity="other">%d Elemente gelesen</item></plurals>
     <plurals name="tool_run_searching"><item quantity="one">%d Quelle wird durchsucht</item><item quantity="other">%d Quellen werden durchsucht</item></plurals>
@@ -3841,6 +3842,8 @@
     <string name="thinking_settled">Gedanke</string>
     <string name="thinking_thinking_short">Denkt nach</string>
     <string name="thinking_thinking">Denkt nach…</string>
+    <string name="thinking_thinking_for">Denkt seit %1$s</string>
+    <string name="thinking_thought_for">Dachte %1$s nach</string>
     <string name="task_status_working">In Arbeit</string>
     <string name="task_status_needs_input">Eingabe erforderlich</string>
     <string name="task_status_failed">Fehlgeschlagen</string>

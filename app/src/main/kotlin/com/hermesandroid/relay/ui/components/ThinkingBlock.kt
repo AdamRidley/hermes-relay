@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +34,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import com.hermesandroid.relay.R
+import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,6 +76,17 @@ fun ThinkingBlock(
     var userToggled by toggledState
     LaunchedEffect(isStreaming, collapsedByDefault) {
         if (!userToggled) expanded = isStreaming && !collapsedByDefault
+    }
+    // Seconds this block has been (or was) live. Ticks while streaming and
+    // keeps its last value afterwards, so a settled block can still say how
+    // long it took without any persisted timing state.
+    var liveSeconds by remember(stateKey) { mutableIntStateOf(0) }
+    LaunchedEffect(isStreaming, stateKey) {
+        if (!isStreaming) return@LaunchedEffect
+        while (true) {
+            delay(1_000)
+            liveSeconds += 1
+        }
     }
     val locale = LocalLocale.current.platformLocale
     val timeLabel = timestamp?.let {
@@ -123,10 +136,13 @@ fun ThinkingBlock(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = headerText ?: if (isStreaming) {
-                        stringResource(R.string.thinking_thinking)
-                    } else {
-                        stringResource(R.string.thinking_settled)
+                    text = headerText ?: when {
+                        isStreaming && liveSeconds > 0 ->
+                            stringResource(R.string.thinking_thinking_for, formatThinkingDuration(liveSeconds))
+                        isStreaming -> stringResource(R.string.thinking_thinking)
+                        liveSeconds > 0 ->
+                            stringResource(R.string.thinking_thought_for, formatThinkingDuration(liveSeconds))
+                        else -> stringResource(R.string.thinking_settled)
                     },
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -166,3 +182,7 @@ fun ThinkingBlock(
         }
     }
 }
+
+/** Seconds as the short duration the reasoning headers use, e.g. 5s or 1m 05s. */
+private fun formatThinkingDuration(seconds: Int): String =
+    if (seconds < 60) "${seconds}s" else "${seconds / 60}m ${(seconds % 60).toString().padStart(2, '0')}s"
