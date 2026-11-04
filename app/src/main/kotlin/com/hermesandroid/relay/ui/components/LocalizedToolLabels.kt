@@ -9,6 +9,10 @@ import com.hermesandroid.relay.R
  * name does not map to a known tool. Pure mapping so it can be unit-tested.
  */
 fun localizeToolNameKey(name: String): Int? = when {
+    // MCP names are `mcp__<Server>__<tool>`: a substring rule here turns
+    // `mcp__Home_Assistant__ha_search` into "Web search". They are labelled from
+    // the host's payload instead (see ToolCall.displayNameOrNull).
+    name.startsWith("mcp__") -> null
     name.contains("terminal") -> R.string.tool_name_terminal
     name.contains("execute") -> R.string.tool_name_execute_code
     name.contains("read_file") -> R.string.tool_name_read_file

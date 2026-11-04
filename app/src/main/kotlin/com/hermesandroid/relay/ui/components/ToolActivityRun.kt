@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hermesandroid.relay.R
+import com.hermesandroid.relay.data.displayNameOrNull
 import com.hermesandroid.relay.data.ToolCall
 import com.hermesandroid.relay.data.isImageGenerationToolName
 import com.hermesandroid.relay.ui.components.pet.petObstacleSurface
@@ -155,7 +156,8 @@ fun ToolActivityRun(
     // a count gives the reader nothing they cannot see. Several calls keep the
     // "Ran 2 commands" summary and the expandable body.
     val singleCommand = calls.singleOrNull()?.takeIf { counts.commands == 1 }
-    val subject = singleCommand?.activitySubject()
+    val subject = calls.singleOrNull()?.displayNameOrNull()
+        ?: singleCommand?.activitySubject()
     val summary = when {
         singleCommand != null && subject != null -> stringResource(
             if (singleCommand.isComplete) R.string.tool_run_ran else R.string.tool_run_running,
@@ -289,7 +291,8 @@ private fun toolActivitySummary(counts: ToolActivityCounts, live: Boolean): Stri
 
 @Composable
 private fun toolActivityTickerLabel(call: ToolCall): String {
-    val name = localizeToolName(call.name).ifBlank { stringResource(R.string.tool_preparing) }
+    val name = call.displayNameOrNull()
+        ?: localizeToolName(call.name).ifBlank { stringResource(R.string.tool_preparing) }
     return when {
         call.isGenerating && !call.isComplete -> stringResource(R.string.tool_run_preparing, name)
         !call.isComplete -> stringResource(R.string.tool_run_running, name)

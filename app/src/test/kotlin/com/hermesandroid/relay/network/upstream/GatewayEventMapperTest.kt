@@ -120,6 +120,7 @@ class GatewayEventMapperTest {
         val thinkingDeltas = mutableListOf<String>()
         val toolStarts = mutableListOf<Pair<String, String>>()
         val toolStartArgs = mutableListOf<Pair<String, String?>>()
+        val toolStartLabels = mutableListOf<Pair<String, List<com.hermesandroid.relay.data.ToolLabel>>>()
         val toolDones = mutableListOf<Pair<String, String?>>()
         val toolFails = mutableListOf<Pair<String, String?>>()
         val toolOutputRisks = mutableListOf<GatewayToolOutputRisk>()
@@ -150,9 +151,10 @@ class GatewayEventMapperTest {
             onInterimMessage = { text, alreadyStreamed -> interimMessages += text to alreadyStreamed },
             onInterimReconciled = { text -> reconciledInterims += text },
             onThinkingDelta = { thinkingDeltas += it },
-            onToolCallStart = { id, name, args ->
+            onToolCallStart = { id, name, args, labels ->
                 toolStarts += id to name
                 toolStartArgs += id to args
+                toolStartLabels += id to labels
             },
             onToolCallDone = { id, preview -> toolDones += id to preview },
             onToolCallFailed = { id, err -> toolFails += id to err },

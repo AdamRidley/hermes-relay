@@ -3214,9 +3214,9 @@ class ChatViewModel : ViewModel() {
             onThinkingDelta = { delta ->
                 if (acceptsEvent()) handler.onThinkingDelta(messageId, delta)
             },
-            onToolCallStart = { toolCallId, toolName, argsPreview ->
+            onToolCallStart = { toolCallId, toolName, argsPreview, labels ->
                 if (acceptsEvent()) {
-                    handler.onToolCallStart(messageId, toolCallId, toolName, argsPreview)
+                    handler.onToolCallStart(messageId, toolCallId, toolName, argsPreview, labels = labels)
                 }
             },
             onToolCallDone = { toolCallId, preview ->
@@ -8411,9 +8411,9 @@ class ChatViewModel : ViewModel() {
             onThinkingDelta = { delta ->
                 if (owns()) handler.onThinkingDelta(messageId, delta)
             },
-            onToolCallStart = { toolCallId, toolName, argsPreview ->
+            onToolCallStart = { toolCallId, toolName, argsPreview, labels ->
                 if (owns()) {
-                    handler.onToolCallStart(messageId, toolCallId, toolName, argsPreview)
+                    handler.onToolCallStart(messageId, toolCallId, toolName, argsPreview, labels = labels)
                     scheduleCheckpointWrite(immediate = true)
                 }
             },
@@ -10344,7 +10344,8 @@ class ChatViewModel : ViewModel() {
         }
         val observedImageToolStates = mutableMapOf<String, String>()
         val nativeImageToolProgressObserved = AtomicBoolean(false)
-        val handleToolCallStart = { toolCallId: String, toolName: String, argsPreview: String? ->
+        val handleToolCallStart =
+            { toolCallId: String, toolName: String, argsPreview: String?, labels: List<com.hermesandroid.relay.data.ToolLabel> ->
             markTransportAccepted()
             ensurePostInterimMessage()
             streamDeltas.flushNow()
@@ -10352,7 +10353,13 @@ class ChatViewModel : ViewModel() {
                 isImageGenerationToolName(toolName) &&
                     observedImageToolStates.putIfAbsent(toolCallId, "running") != null
             if (!alreadyObserved) {
-                handler.onToolCallStart(currentMessageId, toolCallId, toolName, argsPreview)
+                handler.onToolCallStart(
+                    currentMessageId,
+                    toolCallId,
+                    toolName,
+                    argsPreview,
+                    labels = labels,
+                )
             }
             scheduleCheckpointWrite(immediate = true)
         }
@@ -10360,14 +10367,14 @@ class ChatViewModel : ViewModel() {
             if (isImageGenerationToolName(toolName)) {
                 nativeImageToolProgressObserved.set(true)
             }
-            handleToolCallStart(toolCallId, toolName, null)
+            handleToolCallStart(toolCallId, toolName, null, emptyList())
         }
         val onGatewayToolCallStartCb =
-            { toolCallId: String, toolName: String, argsPreview: String? ->
+            { toolCallId: String, toolName: String, argsPreview: String?, labels: List<com.hermesandroid.relay.data.ToolLabel> ->
                 if (isImageGenerationToolName(toolName)) {
                     nativeImageToolProgressObserved.set(true)
                 }
-                handleToolCallStart(toolCallId, toolName, argsPreview)
+                handleToolCallStart(toolCallId, toolName, argsPreview, labels)
             }
         val onToolCallDoneCb = { toolCallId: String, resultPreview: String? ->
             ensurePostInterimMessage()
@@ -10432,7 +10439,7 @@ class ChatViewModel : ViewModel() {
                     snapshot.activities.forEach { activity ->
                         val prior = observedImageToolStates[activity.callId]
                         if (prior == null) {
-                            handleToolCallStart(activity.callId, activity.toolName, null)
+                            handleToolCallStart(activity.callId, activity.toolName, null, emptyList())
                         }
                         if (
                             activity.state == "completed" &&

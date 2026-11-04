@@ -428,6 +428,13 @@ data class ToolCall(
      */
     val thinkingSegment: Int? = null,
     /**
+     * Server-classified label(s) for this call, when the host supplied any.
+     * Present for every call the gateway classifies, and essential for names a
+     * client cannot read on its own (`mcp__Home_Assistant__ha_search` behind the
+     * `tool_call` bridge).
+     */
+    val labels: List<ToolLabel> = emptyList(),
+    /**
      * Subagent lane index from gateway `subagent.*` events (`task_index`).
      * Null = top-level tool call, rendered exactly as before. Non-null
      * calls are grouped per index into a SubagentLane under the bubble.
@@ -524,3 +531,7 @@ data class ChatSession(
     private fun firstPositive(vararg values: Long): Long =
         values.firstOrNull { it > 0L } ?: 0L
 }
+
+/** The host's label for this call, when it supplied one. */
+val ToolCall.serverLabel: ToolLabel?
+    get() = labels.firstOrNull { it.display.isNotBlank() }

@@ -140,9 +140,9 @@ internal class SubagentChildPreviewController(
         onThinkingDelta = { delta ->
             runOrQueue(context) { mutate(context) { onThinkingDelta(context.messageId, delta) } }
         },
-        onToolCallStart = { id, name, preview ->
+        onToolCallStart = { id, name, preview, labels ->
             runOrQueue(context) {
-                mutate(context) { onToolCallStart(context.messageId, id, name, preview) }
+                mutate(context) { onToolCallStart(context.messageId, id, name, preview, labels = labels) }
             }
         },
         onToolCallDone = { id, preview ->

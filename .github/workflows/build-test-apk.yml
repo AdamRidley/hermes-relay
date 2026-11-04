@@ -40,7 +40,7 @@ jobs:
       - name: Unit tests
         # Scoped to the class this branch adds: the full suite carries two
         # pre-existing TimeoutCancellationException failures unrelated to it.
-        run: ./gradlew testSideloadDebugUnitTest --tests "com.hermesandroid.relay.data.ThinkingSegmentsTest" --console=plain
+        run: ./gradlew testSideloadDebugUnitTest --tests "com.hermesandroid.relay.data.ThinkingSegmentsTest" --tests "com.hermesandroid.relay.data.ToolLabelTest" --console=plain
 
       - name: Build the sideload debug APK
         # Only the sideload flavour is installed on the test phone; building the

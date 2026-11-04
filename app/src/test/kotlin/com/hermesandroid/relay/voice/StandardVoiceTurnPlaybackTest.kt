@@ -280,7 +280,9 @@ class StandardVoiceTurnPlaybackTest {
             onStart = { handler.addPlaceholderMessage(message("answer", "").copy(isStreaming = true)) },
             onTextDelta = { handler.onTextDelta("answer", it) },
             onThinkingDelta = { handler.onThinkingDelta("answer", it) },
-            onToolCallStart = { id, name, args -> handler.onToolCallStart("answer", id, name, args) },
+            onToolCallStart = { id, name, args, labels ->
+                handler.onToolCallStart("answer", id, name, args, labels = labels)
+            },
             onToolCallDone = { id, result -> handler.onToolCallComplete("answer", id, result) },
             onToolCallFailed = { id, error -> handler.onToolCallFailed("answer", id, error) },
             onTurnComplete = { handler.onTurnComplete("answer") },

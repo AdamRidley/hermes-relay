@@ -724,7 +724,12 @@ class GatewayTurnCallbacks(
      */
     val onInterimReconciled: (text: String) -> Unit = { _ -> },
     val onThinkingDelta: (String) -> Unit,
-    val onToolCallStart: (toolCallId: String, toolName: String, argsPreview: String?) -> Unit,
+    val onToolCallStart: (
+        toolCallId: String,
+        toolName: String,
+        argsPreview: String?,
+        labels: List<com.hermesandroid.relay.data.ToolLabel>,
+    ) -> Unit,
     val onToolCallDone: (toolCallId: String, resultPreview: String?) -> Unit,
     val onToolCallFailed: (toolCallId: String, errorMsg: String?) -> Unit,
     /** Attach deterministic output-risk metadata to the matching tool card. */

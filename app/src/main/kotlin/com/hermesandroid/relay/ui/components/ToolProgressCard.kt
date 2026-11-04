@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hermesandroid.relay.R
+import com.hermesandroid.relay.data.displayNameOrNull
 import com.hermesandroid.relay.data.ToolCall
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -193,7 +194,8 @@ fun ToolProgressCard(
 
                 // Tool name — tool.generating may arrive nameless
                 Text(
-                    text = if (isPreparing) localizeToolName(toolCall.name).ifBlank { stringResource(R.string.tool_preparing) } else localizeToolName(toolCall.name),
+                    text = toolCall.displayNameOrNull()
+                        ?: localizeToolName(toolCall.name).ifBlank { stringResource(R.string.tool_preparing) },
                     style = MaterialTheme.typography.labelMedium,
                     color = if (isPreparing) MaterialTheme.colorScheme.onSurfaceVariant
                         else androidx.compose.ui.graphics.Color.Unspecified,

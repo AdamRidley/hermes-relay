@@ -405,6 +405,11 @@ data class MessageItem(
     // return to the chat instead of existing only for the live turn.
     val reasoning: String? = null,
     @SerialName("reasoning_content") val reasoningContent: String? = null,
+    /**
+     * Per-call display labels the gateway computes for bridge tools, keyed by
+     * tool call id. Absent for ordinary calls, whose names are self-describing.
+     */
+    @SerialName("tool_call_labels") val toolCallLabels: JsonElement? = null,
 ) {
     /**
      * Dashboard history uses the SQLite row id as numeric `id`; Gateway

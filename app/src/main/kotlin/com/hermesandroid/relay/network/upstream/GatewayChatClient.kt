@@ -5299,8 +5299,8 @@ class GatewayChatClient(
             dispatchIfCurrent(stillCurrent) { callbacks.onInterimReconciled(text) }
         },
         onThinkingDelta = { v -> dispatchIfCurrent(stillCurrent) { callbacks.onThinkingDelta(v) } },
-        onToolCallStart = { id, name, args ->
-            dispatchIfCurrent(stillCurrent) { callbacks.onToolCallStart(id, name, args) }
+        onToolCallStart = { id, name, args, labels ->
+            dispatchIfCurrent(stillCurrent) { callbacks.onToolCallStart(id, name, args, labels) }
         },
         onToolCallDone = { a, b -> dispatchIfCurrent(stillCurrent) { callbacks.onToolCallDone(a, b) } },
         onToolCallFailed = { a, b -> dispatchIfCurrent(stillCurrent) { callbacks.onToolCallFailed(a, b) } },

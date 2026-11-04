@@ -3,6 +3,7 @@ package com.hermesandroid.relay.network.upstream
 import com.hermesandroid.relay.network.upstream.models.UsageInfo
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import com.hermesandroid.relay.data.parseToolLabels
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
@@ -264,7 +265,12 @@ class GatewayEventMapper(
                     ?: payload.string("args_text")
                     ?.takeIf { it.isNotBlank() }
                     ?: payload.string("context")?.takeIf { it.isNotBlank() }
-                callbacks.onToolCallStart(toolId, name, argsPreview)
+                callbacks.onToolCallStart(
+                    toolId,
+                    name,
+                    argsPreview,
+                    parseToolLabels(payload?.get("labels")),
+                )
             }
 
             "tool.complete" -> {

@@ -350,7 +350,12 @@ class ChatHandler {
                     onThinkingDelta(currentMessageId, it)
                 }
             }
-            "tool.pending", "tool.started" -> onToolCallStart(currentMessageId, callId, toolName)
+            "tool.pending", "tool.started" -> onToolCallStart(
+                currentMessageId,
+                callId,
+                toolName,
+                labels = com.hermesandroid.relay.data.parseToolLabels(payload["labels"]),
+            )
             "tool.completed" -> onToolCallComplete(currentMessageId, callId, textField("result_preview", "summary", "message"))
             "tool.failed" -> onToolCallFailed(currentMessageId, callId, textField("error", "message") ?: "Tool failed")
             "memory.updated", "skill.loaded" -> {
@@ -1508,7 +1513,7 @@ class ChatHandler {
 
             // Reconstruct tool calls from assistant messages
             val toolCalls = if (role == MessageRole.ASSISTANT) {
-                parseToolCallsFromHistory(item.toolCalls, toolResults)
+                parseToolCallsFromHistory(item.toolCalls, toolResults, item.toolCallLabels)
             } else {
                 emptyList()
             }
@@ -2045,7 +2050,8 @@ class ChatHandler {
      */
     private fun parseToolCallsFromHistory(
         toolCallsJson: kotlinx.serialization.json.JsonElement?,
-        toolResults: Map<String?, MessageItem>
+        toolResults: Map<String?, MessageItem>,
+        labelsJson: kotlinx.serialization.json.JsonElement? = null,
     ): List<ToolCall> {
         if (toolCallsJson == null || toolCallsJson !is JsonArray) return emptyList()
 
@@ -2082,7 +2088,8 @@ class ChatHandler {
                 args = args,
                 result = resultText,
                 success = resultText != null, // Has result → completed
-                isComplete = true // History items are always complete
+                isComplete = true, // History items are always complete
+                labels = com.hermesandroid.relay.data.parseToolCallLabels(labelsJson, callId),
             )
         }
     }
@@ -2101,7 +2108,7 @@ class ChatHandler {
         val persistedCalls = coalesceRenderedHistoryItems(items)
             .asSequence()
             .filter { it.role == "assistant" }
-            .flatMap { parseToolCallsFromHistory(it.toolCalls, toolResults).asSequence() }
+            .flatMap { parseToolCallsFromHistory(it.toolCalls, toolResults, it.toolCallLabels).asSequence() }
             .toList()
         if (persistedCalls.isEmpty()) return false
 
@@ -3000,6 +3007,7 @@ class ChatHandler {
         argsPreview: String? = null,
         runId: String? = null,
         provenance: String? = null,
+        labels: List<com.hermesandroid.relay.data.ToolLabel> = emptyList(),
     ) {
         _isStreaming.value = true
 
@@ -3031,6 +3039,7 @@ class ChatHandler {
                             startedAt = System.currentTimeMillis(),
                             runId = runId ?: calls[genIdx].runId,
                             provenance = provenance ?: calls[genIdx].provenance,
+                            labels = labels.ifEmpty { calls[genIdx].labels },
                             thinkingSegment = openThinkingSegmentIndex(msg.thinkingSegments),
                         )
                         msg.copy(
@@ -3048,6 +3057,7 @@ class ChatHandler {
                                 isComplete = false,
                                 runId = runId,
                                 provenance = provenance,
+                                labels = labels,
                                 thinkingSegment = openThinkingSegmentIndex(msg.thinkingSegments),
                             ),
                             thinkingSegments = sealThinkingSegment(msg.thinkingSegments),
