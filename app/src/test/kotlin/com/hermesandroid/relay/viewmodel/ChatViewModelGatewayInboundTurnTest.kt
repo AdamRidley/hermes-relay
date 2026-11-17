@@ -3141,6 +3141,89 @@ class ChatViewModelGatewayInboundTurnTest {
         awaitCondition { viewModel.pendingAsk.value == null }
     }
 
+    /**
+     * An ask card is its own transcript row appended after the live assistant
+     * row. Everything the reply produces after the answer has to land beneath
+     * the card, or the row above keeps growing and the question ends up
+     * pinned to the bottom of the conversation.
+     */
+    @Test
+    fun clarifyCardStaysWhereItInterruptedTheTurn() {
+        viewModel.sendMessage("Ask me mid-turn")
+        gatewayHarness.awaitRpc("prompt.submit")
+
+        serverWs.send(gatewayHarness.eventFrame("message.start", null, "live-resumed"))
+        serverWs.send(
+            gatewayHarness.eventFrame(
+                "message.delta",
+                buildJsonObject { put("text", "Checking first.") },
+                "live-resumed",
+            ),
+        )
+        awaitCondition { handler.messages.value.lastOrNull()?.content == "Checking first." }
+
+        serverWs.send(
+            gatewayHarness.eventFrame(
+                "clarify.request",
+                buildJsonObject {
+                    put("request_id", "clarify-midturn")
+                    put("question", "Which environment?")
+                    put("choices", buildJsonArray {
+                        add(JsonPrimitive("stage"))
+                        add(JsonPrimitive("prod"))
+                    })
+                },
+                "live-resumed",
+            ),
+        )
+        awaitCondition { viewModel.pendingAsk.value?.ask?.requestId == "clarify-midturn" }
+        val pending = requireNotNull(viewModel.pendingAsk.value)
+
+        viewModel.answerAsk(pending.messageId, pending.cardKey, "stage")
+        gatewayHarness.awaitRpc("clarify.respond")
+        awaitCondition { viewModel.pendingAsk.value == null }
+
+        serverWs.send(
+            gatewayHarness.eventFrame(
+                "message.delta",
+                buildJsonObject { put("text", "Continuing after the answer.") },
+                "live-resumed",
+            ),
+        )
+        serverWs.send(
+            gatewayHarness.eventFrame(
+                "tool.start",
+                buildJsonObject {
+                    put("tool_id", "tool-after-ask")
+                    put("name", "terminal")
+                },
+                "live-resumed",
+            ),
+        )
+        awaitCondition {
+            handler.messages.value.any { message ->
+                message.toolCalls.any { it.id == "tool-after-ask" }
+            }
+        }
+
+        val messages = handler.messages.value
+        val cardIndex = messages.indexOfFirst { it.id == pending.messageId }
+        val beforeCard = messages.indexOfFirst { it.content.contains("Checking first.") }
+        val answerText = messages.indexOfFirst { it.content.contains("Continuing after the answer.") }
+        val toolRow = messages.indexOfFirst { message ->
+            message.toolCalls.any { it.id == "tool-after-ask" }
+        }
+
+        assertTrue("card missing from transcript: $messages", cardIndex >= 0)
+        assertTrue("pre-ask reasoning must stay above the card", beforeCard in 0 until cardIndex)
+        assertTrue("text after the answer must sit below the card", answerText > cardIndex)
+        assertTrue("tool calls after the answer must sit below the card", toolRow > cardIndex)
+        assertTrue(
+            "the card must not be the last row once the reply continues",
+            messages.last().id != pending.messageId,
+        )
+    }
+
     private fun presentBatchClarify(requestId: String = "batch") {
         serverWs.send(gatewayHarness.eventFrame("clarify.request",
             gatewayHarness.json.parseToJsonElement("""{"request_id":"$requestId","questions":[

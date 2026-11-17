@@ -472,6 +472,16 @@ class ChatViewModel : ViewModel() {
     private var rotateLiveRowAtSteer: (() -> Unit)? = null
 
     /**
+     * Splits the live assistant row around an ask card (clarify / approval /
+     * sudo / secret). The card is its own transcript row appended after the
+     * live row, so without this the row above keeps growing and everything
+     * streamed after the answer piles up above the question. Scoped to the
+     * session it was set for: an ask raised for a background session must not
+     * move the foreground row. Cleared with [activeStreamDeltas].
+     */
+    private var splitLiveRowAtAsk: SplitAtAskCard? = null
+
+    /**
      * True when [activeStream] is a GATEWAY turn (vs an SSE EventSource). A
      * gateway turn runs on the gateway client, which survives a same-connection
      * route blip via its own reconnect — so [updateApiClient] (a route handoff
@@ -7046,7 +7056,15 @@ class ChatViewModel : ViewModel() {
             )
         }
         val messageId = restored?.messageId ?: "ask-$cardKey"
-        handler.appendAskCardMessage(messageId, card)
+        // The card belongs where it interrupted the turn. Seal the live row
+        // above it and let the next delta reopen a row beneath, so later
+        // thinking and tool calls land under the question instead of piling
+        // up above it. A rehydrated ask already sits in place; a completed
+        // batch has nothing left to wait for.
+        val insertCard: () -> Unit = { handler.appendAskCardMessage(messageId, card) }
+        val split = splitLiveRowAtAsk
+            ?.takeIf { restored == null && it.sessionId == sessionId && !ask.clarifyComplete }
+        if (split != null) split.insert(insertCard) else insertCard()
         _pendingAsk.value = PendingAsk(
             ask = ask,
             messageId = messageId,
@@ -10277,12 +10295,19 @@ class ChatViewModel : ViewModel() {
         )
         activeStreamDeltas = streamDeltas
 
+        // Set when an ask card interrupted the turn: the row above the card is
+        // sealed, so the first thing the reply produces after the answer must
+        // open a fresh row beneath it. Reopened lazily so an unanswered card
+        // never leaves an empty "thinking" row hanging under it.
+        var askCardSealedCurrentMessage = false
+
         fun ensurePostInterimMessage() {
-            if (!gatewayInterimSealedCurrentMessage) return
+            if (!gatewayInterimSealedCurrentMessage && !askCardSealedCurrentMessage) return
             streamDeltas.flushNow()
             val nextMessageId = UUID.randomUUID().toString()
             currentMessageId = nextMessageId
             gatewayInterimSealedCurrentMessage = false
+            askCardSealedCurrentMessage = false
             handler.addPlaceholderMessage(
                 ChatMessage(
                     id = nextMessageId,
@@ -10321,11 +10346,24 @@ class ChatViewModel : ViewModel() {
         }
         rotateLiveRowAtSteer = ::rotateAtSteerBoundary
 
+        // An ask card is appended as its own row after this live one, so the
+        // reply produced after the answer would otherwise keep growing above
+        // the question. Seal the row above the card here; the successor row
+        // opens on the next delta (see ensurePostInterimMessage).
+        fun splitAtAskCard(insertCard: () -> Unit) {
+            streamDeltas.flushNow()
+            handler.settleStreamingRow(currentMessageId)
+            insertCard()
+            askCardSealedCurrentMessage = true
+        }
+        splitLiveRowAtAsk = SplitAtAskCard(sessionId, ::splitAtAskCard)
+
         fun flushAndReleaseStreamDeltas() {
             streamDeltas.flushNow()
             if (activeStreamDeltas === streamDeltas) {
                 activeStreamDeltas = null
                 rotateLiveRowAtSteer = null
+                splitLiveRowAtAsk = null
             }
         }
 
@@ -10333,6 +10371,10 @@ class ChatViewModel : ViewModel() {
         val onMessageStartedCb = { serverMsgId: String ->
             markTransportAccepted()
             streamDeltas.flushNow()
+            // An ask card or an interim boundary may have sealed this row —
+            // adopt the server id on the successor instead of on a row that
+            // already sits above the card.
+            ensurePostInterimMessage()
             // Replace the placeholder's ID so subsequent deltas/tool calls attach
             // to it instead of creating a duplicate orphan bubble with streaming dots.
             // Only replaces empty+streaming messages (the placeholder), not completed turns.
@@ -12218,6 +12260,16 @@ data class PendingAsk(
     val sessionId: String?,
     val receivedAt: Long = System.currentTimeMillis(),
     val ownerId: String = java.util.UUID.randomUUID().toString(),
+)
+
+/**
+ * The live row splitter an ask card uses, set for one turn on the session
+ * that owns it. [insert] writes the card between the sealed row and the
+ * successor row, so the card lands at the point that interrupted the turn.
+ */
+private class SplitAtAskCard(
+    val sessionId: String?,
+    val insert: (insertCard: () -> Unit) -> Unit,
 )
 
 /**
