@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 - Reasoning blocks keep their open or closed state when a row scrolls out of view, instead of collapsing again on the way back.
 - A correction sent while a turn is running is followed by the rest of the reply, instead of the reply continuing above it.
+- A question or approval card stays where it interrupted the reply. Thinking and tool calls produced after the answer appear below it instead of stacking up above.
 
 ## [Android 1.19.0] - 2026-10-20
 
